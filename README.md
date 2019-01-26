@@ -1,5 +1,5 @@
 # ExpressDocs
-ExpressDocs is a customized Markdown and Mathematic equation renderer in Google Docs. Currently, ExpressDocs support:
+ExpressDocs is a customized Markdown and Mathematic equation renderer in Google Docs partially based on [Auto-LaTeX Equations](https://chrome.google.com/webstore/detail/auto-latex-equations/iaainhiejkciadlhlodaajgbffkebdog?hl=en-US). Currently, ExpressDocs support:
 1. custom deliminaters for custom markdown styles
 2. Rendering of LaTeX/AsciiMath expressions as high quality image
 4. GUI interface on the way...
