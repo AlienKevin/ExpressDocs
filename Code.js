@@ -9,14 +9,11 @@ function markdownToDocs() {
   var exprStr = "2=(((3-x)xx2)/(3-x))";
   var expr = asciimath2latex(exprStr);
   var url = encodeURI(baseUrl + expr);
-  var image = UrlFetchApp.fetch(url);
+  var image = UrlFetchApp.fetch(url).getBlob();
 
-  const body = DocumentApp.getActiveDocument().getBody();
+  const doc = DocumentApp.getActiveDocument();
+  const body = doc.getBody();
 
-  var imageDoc = body.insertImage(3, image);
-  imageDoc.setWidth(imageDoc.getWidth() / 4);
-  imageDoc.setHeight(imageDoc.getHeight() / 4);
-  
   var boldStyle = {};
   boldStyle[DocumentApp.Attribute.BOLD] = true;
   replaceDeliminators(body, "\\*\\*", boldStyle, false);
@@ -31,22 +28,15 @@ function markdownToDocs() {
   replaceDeliminators(body, "`", inlineStyle, false);
 
   handleSubscript(body);
+  
+  var imageDoc = doc.newPosition(body.editAsText(), 15).insertInlineImage(image);
+  imageDoc.setWidth(imageDoc.getWidth() / 4);
+  imageDoc.setHeight(imageDoc.getHeight() / 4);
 }
 
-function loadLibraries() {
-  // Credit Brian @github
-  var LIBRARIES = {
-    "ASCIIMath": "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/latest.js?config=AM_CHTML"
-  }
-
-  Object.keys(LIBRARIES).forEach(function (library) {
-    newFunc = loadJSFromUrl(LIBRARIES[library]);
-    eval('var ' + library + ' = ' + newFunc);
-  });
-}
-
-function loadJSFromUrl(url) {
-  return eval(UrlFetchApp.fetch(url).getContentText());
+function insertImage(doc, image){
+  var cursor = doc.getCursor();
+  return cursor.insertInlineImage(image);
 }
 
 function handleSubscript(body) {
@@ -83,7 +73,11 @@ function replaceDeliminators(body, deliminator, attributes, multiline) {
   replaceText(body, regex, replacer, attributes);
 }
 
-function replaceText(body, regex, replacer, attributes) {
+function replaceText(body, regex, replacer, attributes, isImage) {
+  if (isImage === undefined){
+    isImage = false;
+  }
+  var doc = DocumentApp.getActiveDocument();
   var content = body.getText();
   const text = body.editAsText();
   var match = "";
@@ -97,7 +91,11 @@ function replaceText(body, regex, replacer, attributes) {
     var start = match.index;
     var end = regex.lastIndex - 1;
     text.deleteText(start, end);
-    text.insertText(start, replacer(match, regex));
+    if (isImage){
+      doc.newPosition(content, end).insertInlineImage(replacer);
+    } else{
+      text.insertText(start, replacer(match, regex));
+    }
     var newLength = body.getText().length;
     var replacedLength = oldLength - newLength;
     var newEnd = end - replacedLength;
